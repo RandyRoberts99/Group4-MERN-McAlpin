@@ -13,7 +13,7 @@ jobs:
           if_key_exists: replace
       - name: Pull
         run: ssh github@104.131.64.245 "cd /var/www/html/ && git pull origin dev"
-  pull-from-master:
+  pull-from-main:
     runs-on: ubuntu-latest
     steps:
       - name: Install SSH Key
@@ -24,5 +24,5 @@ jobs:
           known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
           if_key_exists: replace
       - name: Pull
-        run: ssh github@104.131.64.245 "cd /var/www/html/ && git pull origin master"
+        run: ssh github@104.131.64.245 "cd /var/www/html/ && git pull origin main"
 
