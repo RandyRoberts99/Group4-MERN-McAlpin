@@ -1,7 +1,13 @@
 name: deploy-to-server
-on: [push]
+on:
+  push:
+    branches:
+      - dev
+      - main
+
 jobs:
   pull-from-dev:
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - name: Install SSH Key
@@ -13,7 +19,9 @@ jobs:
           if_key_exists: replace
       - name: Pull
         run: ssh github@104.131.64.245 "cd /var/www/html/ && git pull origin dev"
+
   pull-from-main:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Install SSH Key
@@ -25,4 +33,3 @@ jobs:
           if_key_exists: replace
       - name: Pull
         run: ssh github@104.131.64.245 "cd /var/www/html/ && git pull origin main"
-
