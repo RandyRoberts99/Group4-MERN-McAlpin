@@ -18,7 +18,7 @@ jobs:
           known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
           if_key_exists: replace
       - name: Pull
-        run: ssh github-actions@104.131.64.245 "cd /var/www/contactmanager.site/html/ && git pull origin dev && npm install && npm run build && npm deploy"
+        run: ssh github-actions@104.131.64.245 "cd /var/www/contactmanager.site/html/ && git pull origin dev && npm install && npm run build"
 
   pull-from-main:
     if: github.ref == 'refs/heads/main'
@@ -32,4 +32,4 @@ jobs:
           known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
           if_key_exists: replace
       - name: Pull
-        run: ssh github-actions@104.131.64.245 "cd /var/www/contactmanager.site/html/ && git pull origin dev && npm install && npm run build && npm deploy"
+        run: ssh github-actions@104.131.64.245 "cd /var/www/contactmanager.site/html/ && git pull origin dev && npm install && npm run build"
