@@ -5,8 +5,9 @@ import './App.css';
 
 function App() {
   // Constants handling the canvas directly (this will likely turn to database stuff later)
+  const [grids, setGrids] = useState({});
   const [pixels, setPixels] = useState([]);
-  const [canvasSize, setCanvasSize] = useState({width: 10000, height: 10000});
+  const [canvasSize, setCanvasSize] = useState({width: 512, height: 512});
   const [zoomLevel, setZoomLevel] = useState(1);
   const canvasRef = useRef(null);
 
@@ -37,16 +38,16 @@ function App() {
 
   // How to handle pixels being adjusted/rendered
   useEffect(() => {
+    // Relevant canvas-based constants
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
-    const pixelsRef = ref(db, 'pixels');
+    const gridsRef = ref(db, 'canvas');
 
     // Keep canvas pixels updated from database
-    onValue(pixelsRef, (snapshot) => {
+    onValue(gridsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const pixelsArray = Object.values(data);
-        setPixels(pixelsArray);
+        setGrids(data);
       }
     });
 
@@ -57,15 +58,22 @@ function App() {
     context.fillStyle = '#FFFFFF';
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    pixels.forEach((pixel) =>{
-      // Set pixel color
-      context.fillStyle = pixel.color;
+    // Iterate through each grid in the canvas
+  Object.keys(grids).forEach((gridKey) => {
+    const grid = grids[gridKey];
 
-      // Adjust this to change size per pixel
-      context.fillRect(pixel.x * 10 * zoomLevel, pixel.y * 10 * zoomLevel, 10 * zoomLevel, 10 * zoomLevel);
+    // Iterate through each pixel within the given grid
+    Object.keys(grid).forEach((pixelKey) => {
+      const pixel = grid[pixelKey];
+      context.fillStyle = pixel.color;
+      context.fillRect(
+        pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * 16 * zoomLevel,
+        pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * 16 * zoomLevel,
+        zoomLevel, zoomLevel
+      );
     });
-    
-  }, [pixels, canvasSize, zoomLevel]);
+  });
+  }, [grids, canvasSize, zoomLevel]);
 
 
 
@@ -76,19 +84,33 @@ function App() {
     const context = canvas.getContext('2d');
 
     // Scale pixel coordinates based on user zoom level
-    const x = Math.floor((event.clientX - rect.left) / (10 * zoomLevel));
-    const y = Math.floor((event.clientY - rect.top) / (10 * zoomLevel));
+    const x = Math.floor((event.clientX - rect.left) / zoomLevel);
+    const y = Math.floor((event.clientY - rect.top) / zoomLevel);
 
-    // Update pixels array with the new pixel color
-    setPixels((prevPixels) => [...prevPixels, {x, y, color: selectedColor}]);
+    // Determine what grid needs to be updated in firebase
+    const gridX = Math.floor(x / 16);
+    const gridY = Math.floor(y / 16);
 
-    // Update firebase with new pixels
-    const newPixelRef = push(ref(db, 'pixels'));
-    update(newPixelRef, {x, y, color: selectedColor});
+    // Determine the position within the grid the pixel is in
+    const pixelX = x % 16;
+    const pixelY = y % 16;
+
+    // Get the existing grid or create a new one
+    const updatedGrid = grids[`${gridX}_${gridY}`] || {};
+
+    // Update the pixel color
+    updatedGrid[`${pixelX}_${pixelY}`] = { x: pixelX, y: pixelY, color: selectedColor };
+
+    // Update firebase with new grid
+    update(ref(db, `canvas/${gridX}_${gridY}`), updatedGrid);
 
     // Draw the new pixel to the canvas
     context.fillStyle = selectedColor;
-    context.fillRect(x, y, 10 * zoomLevel, 10 * zoomLevel);
+    context.fillRect(
+      pixelX * 10 * zoomLevel + gridX * 16 * 10 * zoomLevel,
+      pixelY * 10 * zoomLevel + gridY * 16 * 10 * zoomLevel,
+      10 * zoomLevel, 10 * zoomLevel
+    );
   };
 
 
