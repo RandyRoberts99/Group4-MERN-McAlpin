@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { db } from "./utils/firebase.js";
+import { onValue, ref, getDatabase, update, push } from "firebase/database";
 import './App.css';
 
 function App() {
@@ -6,6 +8,7 @@ function App() {
   const [pixels, setPixels] = useState([]);
   const [canvasSize, setCanvasSize] = useState({width: 10000, height: 10000});
   const [zoomLevel, setZoomLevel] = useState(1);
+  const canvasRef = useRef(null);
 
   // Variables/Constants handling colors and color changes
   const [selectedColor, setSelectedColor] = useState('#000000'); // Init with default to black
@@ -34,8 +37,18 @@ function App() {
 
   // How to handle pixels being adjusted/rendered
   useEffect(() => {
-    const canvas = document.getElementById('pixelCanvas');
+    const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
+    const pixelsRef = ref(db, 'pixels');
+
+    // Keep canvas pixels updated from database
+    onValue(pixelsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const pixelsArray = Object.values(data);
+        setPixels(pixelsArray);
+      }
+    });
 
     // This adjusts canvas view size based on zoom level
     canvas.width = canvasSize.width * zoomLevel;
@@ -51,13 +64,14 @@ function App() {
       // Adjust this to change size per pixel
       context.fillRect(pixel.x * 10 * zoomLevel, pixel.y * 10 * zoomLevel, 10 * zoomLevel, 10 * zoomLevel);
     });
+    
   }, [pixels, canvasSize, zoomLevel]);
 
 
 
   // How to handle user clicking on the canvas
   const handleCanvasClick = (event) => {
-    const canvas = document.getElementById('pixelCanvas');
+    const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const context = canvas.getContext('2d');
 
@@ -67,6 +81,10 @@ function App() {
 
     // Update pixels array with the new pixel color
     setPixels((prevPixels) => [...prevPixels, {x, y, color: selectedColor}]);
+
+    // Update firebase with new pixels
+    const newPixelRef = push(ref(db, 'pixels'));
+    update(newPixelRef, {x, y, color: selectedColor});
 
     // Draw the new pixel to the canvas
     context.fillStyle = selectedColor;
@@ -103,7 +121,7 @@ function App() {
 
   return (
     <div className="App">
-      <canvas id="pixelCanvas" onClick={handleCanvasClick} onWheel={handleWheel}></canvas>
+      <canvas ref={canvasRef} id="pixelCanvas" onClick={handleCanvasClick} onWheel={handleWheel}></canvas>
       <div className="colorBar">
         {colors.map((color) => (
           <div
