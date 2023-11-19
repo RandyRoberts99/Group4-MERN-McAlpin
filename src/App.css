@@ -3,10 +3,61 @@
 
   /* This just ensures the canvas stays within the user space */
   overflow: hidden;
+  position: relative;
 }
+
+
 
 /* Set up the canvas area */
 #pixelCanvas {
   border: 1px solid #000;
   cursor: pointer;
+  display: block;
+  margin: 0 auto;
+}
+
+
+
+/* Set up color bar */
+.colorBar {
+  position: fixed;
+  bottom: 3%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+
+  /* Set width and height based on viewport to scale */
+  width: 90vw;
+  height: 10vh;
+
+  background-color: #f0f0f0;
+  border-radius: 10px;
+}
+
+
+
+/* Set up color buttons on the color bar */
+.colorButton {
+  /* Ensure only 16 buttons per row */
+  flex-basis: calc((90vw / 16) - 5px);
+
+  /* Calculate button height and width based on viewport/color bar space */
+  width: min(calc((90vw / 16) - 5px), calc((10vh / 2) - 5px));
+  height: min(calc((90vw / 16) - 5px), calc((10vh / 2) - 5px));
+
+  border: 2px solid #000;
+  border-radius: 5px;
+  cursor: pointer;
+
+  /* Calculate space between buttons */
+  margin: calc(5px / 16);
+}
+
+
+
+/* Add a hover effect to the color buttons */
+.colorButton:hover {
+  background-color: #e0e0e0;
 }
