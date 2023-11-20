@@ -14,6 +14,7 @@ function App() {
 
   // Constants handling colors and color changes
   const [selectedColor, setSelectedColor] = useState('#000000'); // Init with default to black
+  const [highlightedPixel, setHighlightedPixel] = useState(null);
   const colors = [ // Array of all 32 colors available to users
     {name: 'burgandy', hex: '#6d001a'}, {name: 'darkred', hex: '#be0039'},
     {name: 'red', hex: '#ff4500'}, {name: 'orange', hex: '#ffa800'},
@@ -58,8 +59,17 @@ function App() {
         );
       });
     });
-  }, [canvasSize, zoomLevel]);
+  }, [canvasSize, zoomLevel, highlightedPixel]);
 
+
+
+  // Handle pixel highlighting when selected
+  const highlightPixel = (context, x, y) => {
+    // First check if a pixel is highlighted
+    if (!highlightedPixel || highlightedPixel.x !== x || highlightedPixel.y !== y) {
+      return; // Exit the function if no pixel is highlighted or if it's a different pixel
+    }
+  };
 
 
   // How to handle pixels being adjusted/rendered
@@ -117,8 +127,6 @@ function App() {
     const rect = canvas.getBoundingClientRect();
     const context = canvas.getContext('2d');
 
-    console.log('User clicked on canvas, handleCanvasClick called.');
-
     // Scale pixel coordinates based on user zoom level
     const x = Math.floor((event.clientX - rect.left) / zoomLevel);
     const y = Math.floor((event.clientY - rect.top) / zoomLevel);
@@ -131,66 +139,58 @@ function App() {
     const pixelX = x % 16;
     const pixelY = y % 16;
 
-    // Construct the key for the pending changes
-    const key = `${gridX}_${gridY}`;
+    // Check if the clicked pixel is the same as the highlighted pixel
+    if (highlightedPixel && pixelX + gridX * 16 === highlightedPixel.x && pixelY + gridY * 16 === highlightedPixel.y) {
+      return;
+    }
 
-    // Update the pixel color in the local state
-    setPendingChanges((prev) => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        [`${pixelX}_${pixelY}`]: { x: pixelX, y: pixelY, color: selectedColor },
-      },
-    }));
+    // Update the state for highlighting
+    setHighlightedPixel({x: pixelX + gridX * 16,
+      y: pixelY + gridY * 16});
 
-    // Draw the new pixel to the canvas
-    context.fillStyle = selectedColor;
-    context.fillRect(
-      pixelX * zoomLevel + gridX * 16 * zoomLevel,
-      pixelY * zoomLevel + gridY * 16 * zoomLevel,
-      zoomLevel, zoomLevel
-    );
-    console.log('handleCanvasClick completed execution.');
+    // Highlight the clicked pixel
+    highlightPixel(context, pixelX + gridX * 16,
+      pixelY + gridY * 16);
   };
 
 
   
   // Handle sending updates to the database
   const handleSendUpdates = async () => {
-    // Check for pending changes
-    if(Object.keys(pendingChanges).length === 0){
-      console.log('No pending changes to send.');
-      return;
-    }
-
-    // Update the database with the pending changes
-    const gridsRef = ref(db, 'canvas');
     try {
-      // Fetch the existing data from the database
-      const snapshot = await get(gridsRef);
-      const existingData = snapshot.val() || {};
+      // Check if there's a highlighted pixel
+      if (highlightedPixel) {
+        // Send updates to the database using the highlighted pixel
+        const gridX = Math.floor((highlightedPixel.x / 16));
+        const gridY = Math.floor((highlightedPixel.y / 16));
   
-      // Merge the pending changes with the existing data
-      const newData = { ...existingData };
+        // Get the existing grid or create a new one
+        const existingGrid = { ...grids[`${gridX}_${gridY}`] } || {};
+  
+        // Update the pixel color
+        existingGrid[`${Math.floor(highlightedPixel.x % 16)}_${Math.floor(highlightedPixel.y % 16)}`] = {
+          x: Math.floor(highlightedPixel.x % 16),
+          y: Math.floor(highlightedPixel.y % 16),
+          color: selectedColor,
+        }; 
+  
+        // Update local state
+        setGrids((prevGrids) => ({
+          ...prevGrids,
+          [`${gridX}_${gridY}`]: {
+            ...prevGrids[`${gridX}_${gridY}`],
+            ...existingGrid,
+          },
+        }));
 
-      Object.keys(pendingChanges).forEach((gridKey) => {
-        // Ensure the grid exists in the merged data
-        newData[gridKey] = newData[gridKey] || {};
-
-        // Merge pixels in the current grid in the database
-        Object.keys(pendingChanges[gridKey]).forEach((pixelKey) => {
-          newData[gridKey][pixelKey] = pendingChanges[gridKey][pixelKey];
-        });
-      });
+        // Deselect the highlighted pixel once it is placed
+        setHighlightedPixel(null);
   
-      // Update the database with the merged data
-      await update(gridsRef, newData);
-  
-      console.log('Pending changes sent to the database.');
-      // Clear local state once the changes are uploaded to the database
-      setPendingChanges({});
+        // Send updates to the database for the specific grid
+        await update(ref(db, `canvas/${gridX}_${gridY}`), existingGrid);
+      }
     } catch (error) {
-      console.error('Error sending pending changes to the database:', error.message);
+      console.error("Error sending updates to the database:", error);
     }
   };
 
@@ -199,13 +199,39 @@ function App() {
   // How to handle user scroll wheel for zoom level
   const handleWheel = (event) => {
     event.preventDefault();
-    const delta = event.deltaY;
+
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
 
     setZoomLevel((prevZoom) => {
-      // This line can be adjusted to change zoom incrementing
-      const newZoom = prevZoom + (delta > 0 ? -0.1 : 0.1);
+      const zoomFactor = 0.1;
+      const newZoom = prevZoom + (event.deltaY > 0 ? -zoomFactor : zoomFactor);
 
-      return Math.max(0.1, Math.min(3, newZoom));
+      // Set maximum zoom-out distance
+      const minZoom = 1;
+      // Increase the maximum zoom level to allow further zooming
+      const maxZoom = 10;
+
+      const clampedZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+
+      const deltaZoom = clampedZoom / prevZoom;
+
+      const offsetX = mouseX - (mouseX / prevZoom) * canvasSize.width;
+      const offsetY = mouseY - (mouseY / prevZoom) * canvasSize.height;
+
+      const newScrollX = (canvas.scrollLeft + offsetX) * deltaZoom - offsetX;
+      const newScrollY = (canvas.scrollTop + offsetY) * deltaZoom - offsetY;
+
+      setCanvasSize({
+        width: canvasSize.width * deltaZoom,
+        height: canvasSize.height * deltaZoom,
+      });
+
+      canvas.scrollTo(newScrollX, newScrollY);
+
+      return clampedZoom;
     });
   };
 
@@ -225,7 +251,10 @@ function App() {
 
   return (
     <div className="App">
-      <canvas ref={canvasRef} id="pixelCanvas" onClick={handleCanvasClick} onWheel={handleWheel}></canvas>
+      <canvas ref={canvasRef} id="pixelCanvas"
+      onClick={handleCanvasClick}
+      onWheel={handleWheel}
+      ></canvas>
       <div className="colorBar">
         {colors.map((color) => (
           <div

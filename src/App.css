@@ -1,3 +1,9 @@
+html, body {
+  margin: 0;
+  overflow: hidden;
+}
+
+
 .App {
   text-align: center;
 
@@ -10,6 +16,7 @@
 
 /* Set up the canvas area */
 #pixelCanvas {
+  overflow: hidden;
   border: 1px solid #000;
   cursor: pointer;
   display: block;
