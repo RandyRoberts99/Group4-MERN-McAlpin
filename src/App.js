@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db } from "./utils/firebase.js";
-import { onValue, ref, getDatabase, update, push, get } from "firebase/database";
+import { onValue, ref, update } from "firebase/database";
 import './App.css';
 
 function App() {
   // Constants handling the canvas directly (this will likely turn to database stuff later)
   const [grids, setGrids] = useState({});
-  const [timerCount, setTimerCount] = useState(0);
   const [canvasSize, setCanvasSize] = useState({width: 512, height: 512});
   const [zoomLevel, setZoomLevel] = useState(1);
   const canvasRef = useRef(null);
-  const isMounted = useRef(true);
 
   // Constants handling colors and color changes
   const [selectedColor, setSelectedColor] = useState('#000000'); // Init with default to black
@@ -73,7 +71,7 @@ function App() {
       });
     });
     console.log("updateLocalCanvas was run sucessfully.");
-  }, [zoomLevel, highlightedPixel]);
+  }, [zoomLevel, canvasSize]);
 
 
 
@@ -114,7 +112,7 @@ function App() {
     };
   
     // Keep canvas pixels updated from the database
-    const unsubscribe = onValue(gridsRef, (snapshot) => {
+    const listener = onValue(gridsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         setGrids(data);
@@ -125,9 +123,9 @@ function App() {
   
     // Cleanup function to detach the listener when the component unmounts
     return () => {
-      unsubscribe();
+      listener();
     };
-  }, [canvasRef, zoomLevel]);
+  }, [canvasRef, updateLocalCanvas, zoomLevel]);
 
 
 
@@ -250,7 +248,7 @@ function App() {
   // Handles the user selecting a color button to change their pixel color
   const handleColorChange = (color) => {
     // Console log for debugging
-    console.log('User selected color: ${color.name}');
+    console.log(`User selected color: ${color.name}`);
 
     // Update the selected color for the user globally
     setSelectedColor(color.hex);
