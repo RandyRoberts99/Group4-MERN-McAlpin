@@ -42,7 +42,7 @@ function App() {
 
   // Handle updating the canvas
   const updateCanvas = useCallback((context, data) => {
-    context.clearRect(0, 0, canvasSize.width * zoomLevel, canvasSize.height * zoomLevel);
+    context.clearRect(0, 0, canvasSize.width, canvasSize.height);
 
     // Iterate through each grid in the canvas
     Object.keys(data).forEach((gridKey) => {
@@ -82,8 +82,8 @@ function App() {
     // logic to update the canvas on first go
     const updateCanvas = (data) => {
       // This adjusts canvas view size based on zoom level
-      canvas.width = canvasSize.width * zoomLevel;
-      canvas.height = canvasSize.height * zoomLevel;
+      canvas.width = canvasSize.width;
+      canvas.height = canvasSize.height;
 
       context.fillStyle = '#FFFFFF';
       context.fillRect(0, 0, canvas.width, canvas.height);
@@ -202,15 +202,15 @@ function App() {
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
+    const mouseX = Math.floor((event.clientX - rect.left) / zoomLevel);
+    const mouseY = Math.floor((event.clientY - rect.top) / zoomLevel);
 
     setZoomLevel((prevZoom) => {
       const zoomFactor = 0.1;
-      const newZoom = prevZoom + (event.deltaY > 0 ? -zoomFactor : zoomFactor);
+      const newZoom = prevZoom + (event.deltaY > 0 ? -zoomFactor : zoomFactor)
 
       // Set maximum zoom-out distance
-      const minZoom = 1;
+      const minZoom = 0.1;
       // Increase the maximum zoom level to allow further zooming
       const maxZoom = 10;
 
