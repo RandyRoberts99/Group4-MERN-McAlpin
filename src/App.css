@@ -38,6 +38,22 @@
 
 
 
+/* set up the send button */
+.sendButton {
+  flex-basis: 100%;
+  width: calc(90vw - 2 * calc(5px / 16));
+  height: min(calc((90vw / 16) - 5px), calc((10vh / 2) - 5px));
+  border: 2px solid #000;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: calc(5px / 16);
+  color: #fff;
+  background-color: var(--button-color);
+  transition: background-color 0.2s;
+}
+
+
+
 /* Set up color buttons on the color bar */
 .colorButton {
   /* Ensure only 16 buttons per row */
