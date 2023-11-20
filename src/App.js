@@ -6,7 +6,7 @@ import './App.css';
 function App() {
   // Constants handling the canvas directly (this will likely turn to database stuff later)
   const [grids, setGrids] = useState({});
-  const [pixels, setPixels] = useState([]);
+  const [timerCount, setTimerCount] = useState(0);
   const [canvasSize, setCanvasSize] = useState({width: 512, height: 512});
   const [zoomLevel, setZoomLevel] = useState(1);
   const canvasRef = useRef(null);
@@ -35,13 +35,26 @@ function App() {
   ]
   const [sendButtonColor, setSendButtonColor] = useState(colors[0].hex);
 
-  // Constants to handle changes to the canvas
-  const [pendingChanges, setPendingChanges] = useState({});
-
 
 
   // Handle updating the canvas
-  const updateCanvas = useCallback((context, data) => {
+  const updateLocalCanvas = useCallback((data) => {
+    const canvas = canvasRef.current;
+    canvas.width = canvasSize.width;
+    canvas.height = canvasSize.height;
+
+    if(!canvas){
+      console.error("Canvas element not found!");
+      return;
+    }
+
+    const context = canvas.getContext('2d');
+
+    if(!context){
+      console.error("2D context not found!");
+      return;
+    }
+
     context.clearRect(0, 0, canvasSize.width, canvasSize.height);
 
     // Iterate through each grid in the canvas
@@ -59,7 +72,8 @@ function App() {
         );
       });
     });
-  }, [canvasSize, zoomLevel, highlightedPixel]);
+    console.log("updateLocalCanvas was run sucessfully.");
+  }, [zoomLevel, highlightedPixel]);
 
 
 
@@ -74,24 +88,18 @@ function App() {
 
   // How to handle pixels being adjusted/rendered
   useEffect(() => {
-    // Relevant canvas-based constants
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     const gridsRef = ref(db, 'canvas');
-
-    // logic to update the canvas on first go
+  
     const updateCanvas = (data) => {
       // This adjusts canvas view size based on zoom level
-      canvas.width = canvasSize.width;
-      canvas.height = canvasSize.height;
-
-      context.fillStyle = '#FFFFFF';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-
+      context.clearRect(0, 0, canvas.width, canvas.height);
+  
       // Iterate through each grid in the canvas
-      Object.keys(grids).forEach((gridKey) => {
-      const grid = grids[gridKey];
-
+      Object.keys(data).forEach((gridKey) => {
+        const grid = data[gridKey];
+  
         // Iterate through each pixel within the given grid
         Object.keys(grid).forEach((pixelKey) => {
           const pixel = grid[pixelKey];
@@ -104,20 +112,22 @@ function App() {
         });
       });
     };
-
-    // Keep canvas pixels updated from database
-    onValue(gridsRef, (snapshot) => {
+  
+    // Keep canvas pixels updated from the database
+    const unsubscribe = onValue(gridsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         setGrids(data);
         updateCanvas(data);
+        updateLocalCanvas(data);
       }
     });
-    
+  
+    // Cleanup function to detach the listener when the component unmounts
     return () => {
-      isMounted.current = false;
+      unsubscribe();
     };
-  }, [updateCanvas]);
+  }, [canvasRef, zoomLevel]);
 
 
 
@@ -172,7 +182,7 @@ function App() {
           x: Math.floor(highlightedPixel.x % 16),
           y: Math.floor(highlightedPixel.y % 16),
           color: selectedColor,
-        }; 
+        };
   
         // Update local state
         setGrids((prevGrids) => ({
