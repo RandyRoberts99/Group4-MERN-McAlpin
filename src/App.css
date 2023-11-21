@@ -2,6 +2,28 @@ html, body {
   margin: 0;
 }
 
+.header {
+  background: black;
+  color: white;
+  padding: 10px;
+  padding-right: 30px;
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  min-height: 64px;
+  margin-bottom: 16px;
+}
+
+.login-button {
+  background: white;
+  color: black;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 10px; /* Add margin for equidistance */
+}
 
 .App {
   text-align: center;
@@ -10,9 +32,6 @@ html, body {
   position: relative;
 }
 
-
-
-/* Set up the canvas area */
 #pixelCanvas {
   border: 1px solid #000;
   cursor: pointer;
@@ -20,9 +39,6 @@ html, body {
   margin: 0 auto;
 }
 
-
-
-/* Set up color bar */
 .colorBar {
   position: fixed;
   bottom: 3%;
@@ -31,18 +47,13 @@ html, body {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-
-  /* Set width and height based on viewport to scale */
   width: 90vw;
   height: 10vh;
-
   background-color: #f0f0f0;
   border-radius: 10px;
+  margin-bottom: 1px;
 }
 
-
-
-/* set up the send button */
 .sendButton {
   flex-basis: 100%;
   width: calc(90vw - 2 * calc(5px / 16));
@@ -56,28 +67,16 @@ html, body {
   transition: background-color 0.2s;
 }
 
-
-
-/* Set up color buttons on the color bar */
 .colorButton {
-  /* Ensure only 16 buttons per row */
   flex-basis: calc((90vw / 16) - 5px);
-
-  /* Calculate button height and width based on viewport/color bar space */
   width: min(calc((90vw / 16) - 5px), calc((10vh / 2) - 5px));
   height: min(calc((90vw / 16) - 5px), calc((10vh / 2) - 5px));
-
   border: 2px solid #000;
   border-radius: 5px;
   cursor: pointer;
-
-  /* Calculate space between buttons */
   margin: calc(5px / 16);
 }
 
-
-
-/* Add a hover effect to the color buttons */
 .colorButton:hover {
   background-color: #e0e0e0;
 }

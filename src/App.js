@@ -14,22 +14,22 @@ function App() {
   const [selectedColor, setSelectedColor] = useState('#000000'); // Init with default to black
   const [highlightedPixel, setHighlightedPixel] = useState(null);
   const colors = [ // Array of all 32 colors available to users
-    {name: 'burgandy', hex: '#6d001a'}, {name: 'darkred', hex: '#be0039'},
-    {name: 'red', hex: '#ff4500'}, {name: 'orange', hex: '#ffa800'},
-    {name: 'yellow', hex: '#ffd635'}, {name: 'cream', hex: '#fff8b8'},
-    {name: 'darkgreen', hex: '#00a368'}, {name: 'green', hex: '#00cc78'},
-    {name: 'lime', hex: '#7eed56'}, {name: 'darkteal', hex: '#00756f'},
-    {name: 'teal', hex: '#009eaa'}, {name: 'lightteal', hex: '#00ccc0'},
-    {name: 'darkblue', hex: '#2450a4'}, {name: 'blue', hex: '#3690ea'},
-    {name: 'cyan', hex: '#51e9f4'}, {name: 'indigo', hex: '#493ac1'},
-    {name: 'periwinkle', hex: '#6a5cff'}, {name: 'lavender', hex: '#94b3ff'},
-    {name: 'darkpurple', hex: '#811e9f'}, {name: 'purple', hex: '#b44ac0'},
-    {name: 'palepurple', hex: '#e4abff'}, {name: 'magenta', hex: '#de107f'},
-    {name: 'pink', hex: '#ff3881'}, {name: 'palepink', hex: '#ff99aa'},
-    {name: 'darkbrown', hex: '#6d482f'}, {name: 'brown', hex: '#9c6926'},
-    {name: 'beige', hex: '#ffb470'}, {name: 'black', hex: '#000000'},
-    {name: 'darkgrey', hex: '#515252'}, {name: 'grey', hex: '#898d90'},
-    {name: 'lightgrey', hex: '#d4d7d9'}, {name: 'white', hex: '#ffffff'}
+    { name: 'burgandy', hex: '#6d001a' }, { name: 'darkred', hex: '#be0039' },
+    { name: 'red', hex: '#ff4500' }, { name: 'orange', hex: '#ffa800' },
+    { name: 'yellow', hex: '#ffd635' }, { name: 'cream', hex: '#fff8b8' },
+    { name: 'darkgreen', hex: '#00a368' }, { name: 'green', hex: '#00cc78' },
+    { name: 'lime', hex: '#7eed56' }, { name: 'darkteal', hex: '#00756f' },
+    { name: 'teal', hex: '#009eaa' }, { name: 'lightteal', hex: '#00ccc0' },
+    { name: 'darkblue', hex: '#2450a4' }, { name: 'blue', hex: '#3690ea' },
+    { name: 'cyan', hex: '#51e9f4' }, { name: 'indigo', hex: '#493ac1' },
+    { name: 'periwinkle', hex: '#6a5cff' }, { name: 'lavender', hex: '#94b3ff' },
+    { name: 'darkpurple', hex: '#811e9f' }, { name: 'purple', hex: '#b44ac0' },
+    { name: 'palepurple', hex: '#e4abff' }, { name: 'magenta', hex: '#de107f' },
+    { name: 'pink', hex: '#ff3881' }, { name: 'palepink', hex: '#ff99aa' },
+    { name: 'darkbrown', hex: '#6d482f' }, { name: 'brown', hex: '#9c6926' },
+    { name: 'beige', hex: '#ffb470' }, { name: 'black', hex: '#000000' },
+    { name: 'darkgrey', hex: '#515252' }, { name: 'grey', hex: '#898d90' },
+    { name: 'lightgrey', hex: '#d4d7d9' }, { name: 'white', hex: '#ffffff' }
   ]
   const [sendButtonColor, setSendButtonColor] = useState(colors[0].hex);
 
@@ -41,14 +41,14 @@ function App() {
     canvas.width = canvasSize.width;
     canvas.height = canvasSize.height;
 
-    if(!canvas){
+    if (!canvas) {
       console.error("Canvas element not found!");
       return;
     }
 
     const context = canvas.getContext('2d');
 
-    if(!context){
+    if (!context) {
       console.error("2D context not found!");
       return;
     }
@@ -89,15 +89,15 @@ function App() {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     const gridsRef = ref(db, 'canvas');
-  
+
     const updateCanvas = (data) => {
       // This adjusts canvas view size based on zoom level
       context.clearRect(0, 0, canvas.width, canvas.height);
-  
+
       // Iterate through each grid in the canvas
       Object.keys(data).forEach((gridKey) => {
         const grid = data[gridKey];
-  
+
         // Iterate through each pixel within the given grid
         Object.keys(grid).forEach((pixelKey) => {
           const pixel = grid[pixelKey];
@@ -110,7 +110,7 @@ function App() {
         });
       });
     };
-  
+
     // Keep canvas pixels updated from the database
     const listener = onValue(gridsRef, (snapshot) => {
       const data = snapshot.val();
@@ -120,7 +120,7 @@ function App() {
         updateLocalCanvas(data);
       }
     });
-  
+
     // Cleanup function to detach the listener when the component unmounts
     return () => {
       listener();
@@ -153,8 +153,10 @@ function App() {
     }
 
     // Update the state for highlighting
-    setHighlightedPixel({x: pixelX + gridX * 16,
-      y: pixelY + gridY * 16});
+    setHighlightedPixel({
+      x: pixelX + gridX * 16,
+      y: pixelY + gridY * 16
+    });
 
     // Highlight the clicked pixel
     highlightPixel(context, pixelX + gridX * 16,
@@ -162,7 +164,7 @@ function App() {
   };
 
 
-  
+
   // Handle sending updates to the database
   const handleSendUpdates = async () => {
     try {
@@ -171,17 +173,17 @@ function App() {
         // Send updates to the database using the highlighted pixel
         const gridX = Math.floor((highlightedPixel.x / 16));
         const gridY = Math.floor((highlightedPixel.y / 16));
-  
+
         // Get the existing grid or create a new one
         const existingGrid = { ...grids[`${gridX}_${gridY}`] } || {};
-  
+
         // Update the pixel color
         existingGrid[`${Math.floor(highlightedPixel.x % 16)}_${Math.floor(highlightedPixel.y % 16)}`] = {
           x: Math.floor(highlightedPixel.x % 16),
           y: Math.floor(highlightedPixel.y % 16),
           color: selectedColor,
         };
-  
+
         // Update local state
         setGrids((prevGrids) => ({
           ...prevGrids,
@@ -193,7 +195,7 @@ function App() {
 
         // Deselect the highlighted pixel once it is placed
         setHighlightedPixel(null);
-  
+
         // Send updates to the database for the specific grid
         await update(ref(db, `canvas/${gridX}_${gridY}`), existingGrid);
       }
@@ -218,22 +220,25 @@ function App() {
 
   return (
     <div className="App">
+      <header className="header">
+        <button className="login-button">Login</button>
+      </header>
       <canvas ref={canvasRef} id="pixelCanvas"
       onClick={handleCanvasClick}
       ></canvas>
       <div className="colorBar">
         {colors.map((color) => (
           <div
-          key={color.name}
-          className={`colorButton ${color.name}`}
-          data-color={color.name}
-          style={{backgroundColor: color.hex}}
-          onClick={() => handleColorChange(color)}
+            key={color.name}
+            className={`colorButton ${color.name}`}
+            data-color={color.name}
+            style={{ backgroundColor: color.hex }}
+            onClick={() => handleColorChange(color)}
           ></div>
         ))}
-        <button className="sendButton" 
-        style={{ '--button-color': sendButtonColor }}
-        onClick={handleSendUpdates}>
+        <button className="sendButton"
+          style={{ '--button-color': sendButtonColor }}
+          onClick={handleSendUpdates}>
           Place Pixel
         </button>
       </div>
