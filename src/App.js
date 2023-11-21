@@ -9,6 +9,8 @@ function App() {
   const [grids, setGrids] = useState({});
   const [canvasSize, setCanvasSize] = useState({width: 512, height: 512});
   const canvasRef = useRef(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [pan, setPan] = useState({x: 0, y: 0});
 
   // Constants handling colors and color changes
   const [selectedColor, setSelectedColor] = useState('#000000'); // Init with default to black
@@ -38,8 +40,8 @@ function App() {
   // Handle updating the canvas
   const updateLocalCanvas = useCallback((data) => {
     const canvas = canvasRef.current;
-    canvas.width = canvasSize.width;
-    canvas.height = canvasSize.height;
+    canvas.width = canvasSize.width * zoomLevel;
+    canvas.height = canvasSize.height * zoomLevel;
 
     if (!canvas) {
       console.error("Canvas element not found!");
@@ -53,7 +55,11 @@ function App() {
       return;
     }
 
+    // Adjust canvas sizing per zoom level (calculations already made previously)
     context.clearRect(0, 0, canvasSize.width, canvasSize.height);
+
+    // Translate the canvas in accordance with the pan constants
+    //context.translate(pan.x * zoomLevel, pan.y * zoomLevel);
 
     // Iterate through each grid in the canvas
     Object.keys(data).forEach((gridKey) => {
@@ -64,14 +70,14 @@ function App() {
         const pixel = grid[pixelKey];
         context.fillStyle = pixel.color;
         context.fillRect(
-          pixel.x + parseInt(gridKey.split('_')[0]) * 16,
-          pixel.y + parseInt(gridKey.split('_')[1]) * 16,
-          1, 1
+          pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * 16 * zoomLevel,
+          pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * 16 * zoomLevel,
+          zoomLevel, zoomLevel
         );
       });
     });
     console.log("updateLocalCanvas was run sucessfully.");
-  }, [canvasSize]);
+  }, [canvasSize, zoomLevel]);
 
 
 
@@ -90,9 +96,13 @@ function App() {
     const context = canvas.getContext('2d');
     const gridsRef = ref(db, 'canvas');
 
+    // Transform canvas based on zoom and pan
+    context.setTransform(zoomLevel, 256, 256, zoomLevel, pan.x, pan.y);
+
     const updateCanvas = (data) => {
-      // This adjusts canvas view size based on zoom level
-      context.clearRect(0, 0, canvas.width, canvas.height);
+      // Translate canvas context in accordance with pan values
+      console.log("UEpan.x: ", pan.x, "UEpan.y", pan.y);
+      context.translate(pan.x * zoomLevel, pan.y * zoomLevel);
 
       // Iterate through each grid in the canvas
       Object.keys(data).forEach((gridKey) => {
@@ -103,9 +113,9 @@ function App() {
           const pixel = grid[pixelKey];
           context.fillStyle = pixel.color;
           context.fillRect(
-            pixel.x + parseInt(gridKey.split('_')[0]) * 16,
-            pixel.y + parseInt(gridKey.split('_')[1]) * 16,
-            1, 1
+            pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * 16 * zoomLevel,
+            pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * 16 * zoomLevel,
+            zoomLevel, zoomLevel
           );
         });
       });
@@ -125,7 +135,7 @@ function App() {
     return () => {
       listener();
     };
-  }, [canvasRef, updateLocalCanvas]);
+  }, [canvasRef, updateLocalCanvas, zoomLevel]);
 
 
 
@@ -136,8 +146,8 @@ function App() {
     const context = canvas.getContext('2d');
 
     // Scale pixel coordinates based on user zoom level
-    const x = Math.floor((event.clientX - rect.left));
-    const y = Math.floor((event.clientY - rect.top));
+    const x = Math.floor((event.clientX - rect.left) / zoomLevel);
+    const y = Math.floor((event.clientY - rect.top) / zoomLevel);
 
     // Determine what grid needs to be updated in firebase
     const gridX = Math.floor(x / 16);
@@ -167,6 +177,8 @@ function App() {
 
   // Handle sending updates to the database
   const handleSendUpdates = async () => {
+    // NOTE: all coords sent here should already account for zooming and panning
+    // you should not need to adjust for zoomLevel or pan x/y modifiers
     try {
       // Check if there's a highlighted pixel
       if (highlightedPixel) {
@@ -206,6 +218,68 @@ function App() {
 
 
 
+  // Handle zooming with scroll wheel
+  const handleWheel = (event) => {
+    event.preventDefault();
+
+    // Determine the scale factor for next zoom
+    const scaleDelta = 0.1
+    const scaleFactor = (event.deltaY > 0 ? 1 - scaleDelta : 1 + scaleDelta);
+
+    // Adjust these to set minimum and maximum zoom scales
+    const maxZoom = 10;
+    const minZoom = 1.5;
+
+    // Set pan values based on mouse cursor coords
+    const rect = canvasRef.current.getBoundingClientRect();
+    setPan({
+      x: Math.floor((event.clientX - rect.left) / zoomLevel),
+      y: Math.floor((event.clientY - rect.top) / zoomLevel),
+    });
+
+    // Calculate new zoom level
+    const newZoomLevel = Math.min(Math.max(zoomLevel * scaleFactor, minZoom), maxZoom);
+
+    // Update zoom level
+    setZoomLevel(newZoomLevel);
+  };
+
+
+  /*
+  // Handle holding mouse down for panning
+  const handleMouseDown = (event) => {
+    event.preventDefault();
+
+    // Set up panning event
+    const startPan = {x: event.clientX, y: event.clientY};
+
+    // Handle actual movement
+    const handleMouseMove = (moveEvent) => {
+      moveEvent.preventDefault();
+
+      setPan((prevPan) => ({
+        x: prevPan.x + (moveEvent.clientX - startPan.x) / zoomLevel,
+        y: prevPan.y + (moveEvent.clientY - startPan.y) / zoomLevel,
+      }));
+
+      startPan.x = moveEvent.clientX;
+      startPan.y = moveEvent.clientY;
+    };
+
+    // Remove event listeners to prevent unwanted garbage
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    // Re-attach event listeners
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }
+  */
+
+
+
   // Handles the user selecting a color button to change their pixel color
   const handleColorChange = (color) => {
     // Console log for debugging
@@ -225,6 +299,7 @@ function App() {
       </header>
       <canvas ref={canvasRef} id="pixelCanvas"
       onClick={handleCanvasClick}
+      onWheel={handleWheel}
       ></canvas>
       <div className="colorBar">
         {colors.map((color) => (
