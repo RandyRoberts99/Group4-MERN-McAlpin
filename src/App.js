@@ -40,8 +40,8 @@ function App() {
   // Handle updating the canvas
   const updateLocalCanvas = useCallback((data) => {
     const canvas = canvasRef.current;
-    canvas.width = canvasSize.width * zoomLevel;
-    canvas.height = canvasSize.height * zoomLevel;
+    canvas.width = canvasSize.width;
+    canvas.height = canvasSize.height;
 
     if (!canvas) {
       console.error("Canvas element not found!");
@@ -54,12 +54,6 @@ function App() {
       console.error("2D context not found!");
       return;
     }
-
-    // Adjust canvas sizing per zoom level (calculations already made previously)
-    context.clearRect(0, 0, canvasSize.width, canvasSize.height);
-
-    // Translate the canvas in accordance with the pan constants
-    //context.translate(pan.x * zoomLevel, pan.y * zoomLevel);
 
     // Iterate through each grid in the canvas
     Object.keys(data).forEach((gridKey) => {
@@ -96,14 +90,7 @@ function App() {
     const context = canvas.getContext('2d');
     const gridsRef = ref(db, 'canvas');
 
-    // Transform canvas based on zoom and pan
-    context.setTransform(zoomLevel, 256, 256, zoomLevel, pan.x, pan.y);
-
     const updateCanvas = (data) => {
-      // Translate canvas context in accordance with pan values
-      console.log("UEpan.x: ", pan.x, "UEpan.y", pan.y);
-      context.translate(pan.x * zoomLevel, pan.y * zoomLevel);
-
       // Iterate through each grid in the canvas
       Object.keys(data).forEach((gridKey) => {
         const grid = data[gridKey];
@@ -228,7 +215,7 @@ function App() {
 
     // Adjust these to set minimum and maximum zoom scales
     const maxZoom = 10;
-    const minZoom = 1.5;
+    const minZoom = 1;
 
     // Set pan values based on mouse cursor coords
     const rect = canvasRef.current.getBoundingClientRect();
