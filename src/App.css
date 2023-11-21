@@ -5,12 +5,11 @@ html, body {
 .header {
   background: black;
   color: white;
-  padding: 10px;
-  padding-right: 30px;
+  padding: 20px;
   display: flex;
-  justify-content: right;
+  justify-content: space-between;
   align-items: center;
-  min-height: 64px;
+  min-height: 40px;
   margin-bottom: 16px;
 }
 
@@ -22,7 +21,7 @@ html, body {
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
-  margin: 10px; /* Add margin for equidistance */
+  margin-left: auto;
 }
 
 .App {
@@ -79,4 +78,10 @@ html, body {
 
 .colorButton:hover {
   background-color: #e0e0e0;
+}
+
+.title {
+  font-size: 1.5em;
+  margin: 0;
+  padding: 0;
 }
