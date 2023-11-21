@@ -1,6 +1,5 @@
 html, body {
   margin: 0;
-  overflow: hidden;
 }
 
 
@@ -8,7 +7,6 @@ html, body {
   text-align: center;
 
   /* This just ensures the canvas stays within the user space */
-  overflow: hidden;
   position: relative;
 }
 
@@ -16,7 +14,6 @@ html, body {
 
 /* Set up the canvas area */
 #pixelCanvas {
-  overflow: hidden;
   border: 1px solid #000;
   cursor: pointer;
   display: block;

@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db } from "./utils/firebase.js";
 import { onValue, ref, update } from "firebase/database";
+import { render } from "react-dom";
 import './App.css';
 
 function App() {
   // Constants handling the canvas directly (this will likely turn to database stuff later)
   const [grids, setGrids] = useState({});
   const [canvasSize, setCanvasSize] = useState({width: 512, height: 512});
-  const [zoomLevel, setZoomLevel] = useState(1);
   const canvasRef = useRef(null);
 
   // Constants handling colors and color changes
@@ -64,14 +64,14 @@ function App() {
         const pixel = grid[pixelKey];
         context.fillStyle = pixel.color;
         context.fillRect(
-          pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * 16 * zoomLevel,
-          pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * 16 * zoomLevel,
-          zoomLevel, zoomLevel
+          pixel.x + parseInt(gridKey.split('_')[0]) * 16,
+          pixel.y + parseInt(gridKey.split('_')[1]) * 16,
+          1, 1
         );
       });
     });
     console.log("updateLocalCanvas was run sucessfully.");
-  }, [zoomLevel, canvasSize]);
+  }, [canvasSize]);
 
 
 
@@ -103,9 +103,9 @@ function App() {
           const pixel = grid[pixelKey];
           context.fillStyle = pixel.color;
           context.fillRect(
-            pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * 16 * zoomLevel,
-            pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * 16 * zoomLevel,
-            zoomLevel, zoomLevel
+            pixel.x + parseInt(gridKey.split('_')[0]) * 16,
+            pixel.y + parseInt(gridKey.split('_')[1]) * 16,
+            1, 1
           );
         });
       });
@@ -125,7 +125,7 @@ function App() {
     return () => {
       listener();
     };
-  }, [canvasRef, updateLocalCanvas, zoomLevel]);
+  }, [canvasRef, updateLocalCanvas]);
 
 
 
@@ -136,8 +136,8 @@ function App() {
     const context = canvas.getContext('2d');
 
     // Scale pixel coordinates based on user zoom level
-    const x = Math.floor((event.clientX - rect.left) / zoomLevel);
-    const y = Math.floor((event.clientY - rect.top) / zoomLevel);
+    const x = Math.floor((event.clientX - rect.left));
+    const y = Math.floor((event.clientY - rect.top));
 
     // Determine what grid needs to be updated in firebase
     const gridX = Math.floor(x / 16);
@@ -204,47 +204,6 @@ function App() {
 
 
 
-  // How to handle user scroll wheel for zoom level
-  const handleWheel = (event) => {
-    event.preventDefault();
-
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = Math.floor((event.clientX - rect.left) / zoomLevel);
-    const mouseY = Math.floor((event.clientY - rect.top) / zoomLevel);
-
-    setZoomLevel((prevZoom) => {
-      const zoomFactor = 0.1;
-      const newZoom = prevZoom + (event.deltaY > 0 ? -zoomFactor : zoomFactor)
-
-      // Set maximum zoom-out distance
-      const minZoom = 0.1;
-      // Increase the maximum zoom level to allow further zooming
-      const maxZoom = 10;
-
-      const clampedZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
-
-      const deltaZoom = clampedZoom / prevZoom;
-
-      const offsetX = mouseX - (mouseX / prevZoom) * canvasSize.width;
-      const offsetY = mouseY - (mouseY / prevZoom) * canvasSize.height;
-
-      const newScrollX = (canvas.scrollLeft + offsetX) * deltaZoom - offsetX;
-      const newScrollY = (canvas.scrollTop + offsetY) * deltaZoom - offsetY;
-
-      setCanvasSize({
-        width: canvasSize.width * deltaZoom,
-        height: canvasSize.height * deltaZoom,
-      });
-
-      canvas.scrollTo(newScrollX, newScrollY);
-
-      return clampedZoom;
-    });
-  };
-
-
-
   // Handles the user selecting a color button to change their pixel color
   const handleColorChange = (color) => {
     // Console log for debugging
@@ -261,7 +220,6 @@ function App() {
     <div className="App">
       <canvas ref={canvasRef} id="pixelCanvas"
       onClick={handleCanvasClick}
-      onWheel={handleWheel}
       ></canvas>
       <div className="colorBar">
         {colors.map((color) => (
