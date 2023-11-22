@@ -10,7 +10,7 @@ function App() {
   const [canvasSize, setCanvasSize] = useState({width: 512, height: 512});
   const canvasRef = useRef(null);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [pan, setPan] = useState({x: 0, y: 0});
+  const [pan, setPan] = useState({x: 600, y: 600});
 
   // Constants handling colors and color changes
   const [selectedColor, setSelectedColor] = useState('#000000'); // Init with default to black
@@ -55,6 +55,9 @@ function App() {
       return;
     }
 
+    // Adjust canvas sizing per zoom level (calculations already made previously)
+    context.clearRect(0, 0, canvasSize.width, canvasSize.height);
+
     // Iterate through each grid in the canvas
     Object.keys(data).forEach((gridKey) => {
       const grid = data[gridKey];
@@ -63,6 +66,7 @@ function App() {
       Object.keys(grid).forEach((pixelKey) => {
         const pixel = grid[pixelKey];
         context.fillStyle = pixel.color;
+        console.log("pan.x: ", pan.x, "pan.y: ", pan.y);
         context.fillRect(
           (pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * zoomLevel * 16) - ((pan.x / 512) * ((512 * zoomLevel) - (512))) * zoomLevel,
           (pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * zoomLevel * 16) - ((pan.y / 512) * ((512 * zoomLevel) - (512))) * zoomLevel,
@@ -91,6 +95,8 @@ function App() {
     const gridsRef = ref(db, 'canvas');
 
     const updateCanvas = (data) => {
+      // This adjusts canvas view size based on zoom level
+      context.clearRect(0, 0, canvas.width, canvas.height);
       // Iterate through each grid in the canvas
       Object.keys(data).forEach((gridKey) => {
         const grid = data[gridKey];
@@ -143,11 +149,6 @@ function App() {
     // Determine the position within the grid the pixel is in
     const pixelX = x % 16;
     const pixelY = y % 16;
-
-    // Check if the clicked pixel is the same as the highlighted pixel
-    if (highlightedPixel && pixelX + gridX * 16 === highlightedPixel.x && pixelY + gridY * 16 === highlightedPixel.y) {
-      return;
-    }
 
     // Update the state for highlighting
     setHighlightedPixel({
@@ -217,54 +218,39 @@ function App() {
     const maxZoom = 10;
     const minZoom = 1;
 
-    // Set pan values based on mouse cursor coords
-    const rect = canvasRef.current.getBoundingClientRect();
-    setPan((prevPan) => ({
-      x: Math.floor((event.clientX - rect.left) / zoomLevel),
-      y: Math.floor((event.clientY - rect.top) / zoomLevel),
-    }));
-
     // Calculate new zoom level
     const newZoomLevel = Math.min(Math.max(zoomLevel * scaleFactor, minZoom), maxZoom);
+
+    // Set pan values based on mouse cursor coords
+    const rect = canvasRef.current.getBoundingClientRect();
+    console.log("x: ", pan.x, "y: ", pan.y);
+    if(pan.x === 600 && pan.y === 600){
+      const mouseX = (event.clientX - rect.left);
+      const mouseY = (event.clientY - rect.top);
+      setPan({
+        x: mouseX / newZoomLevel,
+        y: mouseY / newZoomLevel,
+      });
+    };
+
+    if(pan.x != 600 && pan.y != 600){
+      setPan((prevPan) => ({
+        x: (prevPan.x * zoomLevel) / newZoomLevel,
+        y: (prevPan.y * zoomLevel) / newZoomLevel,
+      }));
+    };
+
+    if(newZoomLevel === minZoom){
+      setPan({
+        x: 600,
+        y: 600,
+      })
+    }
+    console.log("postx: ", pan.x, "posty: ", pan.y);
 
     // Update zoom level
     setZoomLevel(newZoomLevel);
   };
-
-
-  /*
-  // Handle holding mouse down for panning
-  const handleMouseDown = (event) => {
-    event.preventDefault();
-
-    // Set up panning event
-    const startPan = {x: event.clientX, y: event.clientY};
-
-    // Handle actual movement
-    const handleMouseMove = (moveEvent) => {
-      moveEvent.preventDefault();
-
-      setPan((prevPan) => ({
-        x: prevPan.x + (moveEvent.clientX - startPan.x) / zoomLevel,
-        y: prevPan.y + (moveEvent.clientY - startPan.y) / zoomLevel,
-      }));
-
-      startPan.x = moveEvent.clientX;
-      startPan.y = moveEvent.clientY;
-    };
-
-    // Remove event listeners to prevent unwanted garbage
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    // Re-attach event listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }
-  */
-
 
 
   // Handles the user selecting a color button to change their pixel color
