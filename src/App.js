@@ -139,8 +139,9 @@ function App() {
     const context = canvas.getContext('2d');
 
     // Scale pixel coordinates based on user zoom level
-    const x = Math.floor((event.clientX - rect.left) / zoomLevel);
-    const y = Math.floor((event.clientY - rect.top) / zoomLevel);
+    const x = Math.floor(((event.clientX - rect.left) / zoomLevel) + ((pan.x / 512) * ((512 * zoomLevel) - 512)));
+    const y = Math.floor(((event.clientY - rect.top) / zoomLevel) + ((pan.y / 512) * ((512 * zoomLevel) - 512)));
+    console.log("clickX: ", x, "clickY: ", y);
 
     // Determine what grid needs to be updated in firebase
     const gridX = Math.floor(x / 16);
@@ -152,13 +153,13 @@ function App() {
 
     // Update the state for highlighting
     setHighlightedPixel({
-      x: pixelX + gridX * 16,
-      y: pixelY + gridY * 16
+      x: (pixelX + gridX * 16),
+      y: (pixelY + gridY * 16)
     });
 
     // Highlight the clicked pixel
-    highlightPixel(context, pixelX + gridX * 16,
-      pixelY + gridY * 16);
+    highlightPixel(context, (pixelX + gridX * 16),
+      (pixelY + gridY * 16));
   };
 
 
@@ -223,7 +224,6 @@ function App() {
 
     // Set pan values based on mouse cursor coords
     const rect = canvasRef.current.getBoundingClientRect();
-    console.log("x: ", pan.x, "y: ", pan.y);
     if(pan.x === 600 && pan.y === 600){
       const mouseX = (event.clientX - rect.left);
       const mouseY = (event.clientY - rect.top);
@@ -233,7 +233,7 @@ function App() {
       });
     };
 
-    if(pan.x != 600 && pan.y != 600){
+    if(pan.x !== 600 && pan.y !== 600){
       setPan((prevPan) => ({
         x: (prevPan.x * zoomLevel) / newZoomLevel,
         y: (prevPan.y * zoomLevel) / newZoomLevel,
@@ -246,7 +246,6 @@ function App() {
         y: 600,
       })
     }
-    console.log("postx: ", pan.x, "posty: ", pan.y);
 
     // Update zoom level
     setZoomLevel(newZoomLevel);
