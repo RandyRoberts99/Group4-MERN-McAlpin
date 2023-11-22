@@ -64,8 +64,8 @@ function App() {
         const pixel = grid[pixelKey];
         context.fillStyle = pixel.color;
         context.fillRect(
-          pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * 16 * zoomLevel,
-          pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * 16 * zoomLevel,
+          (pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * zoomLevel * 16) - ((pan.x / 512) * ((512 * zoomLevel) - (512))) * zoomLevel,
+          (pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * zoomLevel * 16) - ((pan.y / 512) * ((512 * zoomLevel) - (512))) * zoomLevel,
           zoomLevel, zoomLevel
         );
       });
@@ -100,8 +100,8 @@ function App() {
           const pixel = grid[pixelKey];
           context.fillStyle = pixel.color;
           context.fillRect(
-            pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * 16 * zoomLevel,
-            pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * 16 * zoomLevel,
+            (pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * zoomLevel * 16) - ((pan.x / 512) * ((512 * zoomLevel) - (512))) * zoomLevel,
+            (pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * zoomLevel * 16) - ((pan.y / 512) * ((512 * zoomLevel) - (512))) * zoomLevel,
             zoomLevel, zoomLevel
           );
         });
@@ -219,10 +219,10 @@ function App() {
 
     // Set pan values based on mouse cursor coords
     const rect = canvasRef.current.getBoundingClientRect();
-    setPan({
+    setPan((prevPan) => ({
       x: Math.floor((event.clientX - rect.left) / zoomLevel),
       y: Math.floor((event.clientY - rect.top) / zoomLevel),
-    });
+    }));
 
     // Calculate new zoom level
     const newZoomLevel = Math.min(Math.max(zoomLevel * scaleFactor, minZoom), maxZoom);
