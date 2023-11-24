@@ -1,5 +1,6 @@
 html, body {
   margin: 0;
+  background-color: #ff9c9c;
 }
 
 .header {
@@ -7,7 +8,9 @@ html, body {
   color: white;
   padding: 20px;
   display: flex;
-  justify-content: space-between;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: xx-large;
+  justify-content: center;
   align-items: center;
   min-height: 40px;
   margin-bottom: 16px;
@@ -36,11 +39,12 @@ html, body {
   cursor: pointer;
   display: block;
   margin: 0 auto;
+  background-color: #fff;
 }
 
 .colorBar {
   position: fixed;
-  bottom: 3%;
+  bottom: 5%;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -48,7 +52,7 @@ html, body {
   justify-content: space-between;
   width: 90vw;
   height: 10vh;
-  background-color: #f0f0f0;
+  background-color: transparent;
   border-radius: 10px;
   margin-bottom: 1px;
 }
@@ -62,6 +66,8 @@ html, body {
   cursor: pointer;
   margin: calc(5px / 16);
   color: #fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: large;
   background-color: var(--button-color);
   transition: background-color 0.2s;
 }

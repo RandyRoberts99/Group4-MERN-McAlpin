@@ -7,10 +7,10 @@ import './App.css';
 function App() {
   // Constants handling the canvas directly (this will likely turn to database stuff later)
   const [grids, setGrids] = useState({});
-  const [canvasSize, setCanvasSize] = useState({width: 512, height: 512});
+  const [canvasSize, setCanvasSize] = useState({ width: 512, height: 512 });
   const canvasRef = useRef(null);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [pan, setPan] = useState({x: 600, y: 600});
+  const [pan, setPan] = useState({ x: 600, y: 600 });
 
   // Constants handling colors and color changes
   const [selectedColor, setSelectedColor] = useState('#000000'); // Init with default to black
@@ -212,7 +212,7 @@ function App() {
     event.preventDefault();
 
     // Determine the scale factor for next zoom
-    const scaleDelta = 0.1
+    const scaleDelta = 0.05;
     const scaleFactor = (event.deltaY > 0 ? 1 - scaleDelta : 1 + scaleDelta);
 
     // Adjust these to set minimum and maximum zoom scales
@@ -224,7 +224,7 @@ function App() {
 
     // Set pan values based on mouse cursor coords
     const rect = canvasRef.current.getBoundingClientRect();
-    if(pan.x === 600 && pan.y === 600){
+    if (pan.x === 600 && pan.y === 600) {
       const mouseX = (event.clientX - rect.left);
       const mouseY = (event.clientY - rect.top);
       setPan({
@@ -233,14 +233,14 @@ function App() {
       });
     };
 
-    if(pan.x !== 600 && pan.y !== 600){
+    if (pan.x !== 600 && pan.y !== 600) {
       setPan((prevPan) => ({
         x: (prevPan.x * zoomLevel) / newZoomLevel,
         y: (prevPan.y * zoomLevel) / newZoomLevel,
       }));
     };
 
-    if(newZoomLevel === minZoom){
+    if (newZoomLevel === minZoom) {
       setPan({
         x: 600,
         y: 600,
@@ -265,13 +265,18 @@ function App() {
 
 
   return (
+
     <div className="App">
+      <head>
+        <title>Nested Title</title>
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+      </head>
       <header className="header">
-        <button className="login-button">Login</button>
+        Place Clone - Group 4
       </header>
       <canvas ref={canvasRef} id="pixelCanvas"
-      onClick={handleCanvasClick}
-      onWheel={handleWheel}
+        onClick={handleCanvasClick}
+        onWheel={handleWheel}
       ></canvas>
       <div className="colorBar">
         {colors.map((color) => (
