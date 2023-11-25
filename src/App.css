@@ -1,10 +1,10 @@
 html, body {
   margin: 0;
-  background-color: #ff9c9c;
+  background-color: #262c3b;
 }
 
 .header {
-  background: black;
+  background: #202531;
   color: white;
   padding: 20px;
   display: flex;
