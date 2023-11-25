@@ -74,15 +74,18 @@ function App() {
         );
       });
     });
+    if (highlightedPixel != null) {
+      highlightPixel(context, highlightedPixel.x, highlightedPixel.y);
+    }
     console.log("updateLocalCanvas was run sucessfully.");
-  }, [canvasSize, zoomLevel]);
+  }, [canvasSize, zoomLevel, highlightedPixel]);
 
 
 
   // Handle pixel highlighting when selected
   const highlightPixel = (context, x, y) => {
     // First check if a pixel is highlighted
-    if (!highlightedPixel || highlightedPixel.x !== x || highlightedPixel.y !== y) {
+    if (!highlightedPixel || !highlightedPixel.x || !highlightedPixel.y) {
       return; // Exit the function if no pixel is highlighted or if it's a different pixel
     }
     // Otherwise, highlight the pixel
@@ -165,10 +168,6 @@ function App() {
       x: (pixelX + gridX * 16),
       y: (pixelY + gridY * 16)
     });
-
-    // Highlight the clicked pixel
-    highlightPixel(context, (pixelX + gridX * 16),
-      (pixelY + gridY * 16));
   };
 
 
