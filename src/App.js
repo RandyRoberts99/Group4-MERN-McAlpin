@@ -85,6 +85,15 @@ function App() {
     if (!highlightedPixel || highlightedPixel.x !== x || highlightedPixel.y !== y) {
       return; // Exit the function if no pixel is highlighted or if it's a different pixel
     }
+    // Otherwise, highlight the pixel
+    // Draw a box around the pixel, make this on top of everything else
+    context.strokeStyle = '#ff0000';
+    context.lineWidth = 2;
+    context.strokeRect(
+      (x * zoomLevel) - ((pan.x / 512) * ((512 * zoomLevel) - (512))) * zoomLevel,
+      (y * zoomLevel) - ((pan.y / 512) * ((512 * zoomLevel) - (512))) * zoomLevel,
+      zoomLevel, zoomLevel
+    );
   };
 
 
@@ -265,7 +274,6 @@ function App() {
 
 
   return (
-
     <div className="App">
       <head>
         <title>Nested Title</title>
