@@ -1,5 +1,7 @@
 html, body {
-  margin: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background-color: #262c3b;
 }
 
@@ -13,60 +15,69 @@ html, body {
   justify-content: center;
   align-items: center;
   min-height: 40px;
+  max-height: 70px;
   margin-bottom: 16px;
 }
 
-.login-button {
-  background: white;
-  color: black;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-left: auto;
+/* This is a container to wrap the canvas and pixels in, so that
+   the color bar can scale with the viewport separately */
+.canvas-container {
+  position: static;
+  transform-origin: top;
 }
 
 .App {
-  text-align: center;
-
-  /* This just ensures the canvas stays within the user space */
-  position: relative;
+  /* This scales the canvas to the viewport size */
+  transform-origin: top;
 }
 
 #pixelCanvas {
   border: 1px solid #000;
   cursor: pointer;
   display: block;
-  margin: 0 auto;
+  margin: auto;
   background-color: #fff;
+
+  /* This scales the pixels to the canvas */
+  transform-origin: top;
+  margin-bottom: calc(15vh + 172px + 10%);
 }
 
 .colorBar {
   position: fixed;
-  bottom: 5%;
+  bottom: 10%;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   width: 90vw;
-  height: 10vh;
+  height: 3vh;
   background-color: transparent;
-  border-radius: 10px;
-  margin-bottom: 1px;
+  border-radius: 100px;
+  margin-top: auto;
+  margin-bottom: 2vh;
+  transform-origin: bottom left;
 }
 
 .sendButton {
   flex-basis: 100%;
   width: calc(90vw - 2 * calc(5px / 16));
   height: min(calc((90vw / 16) - 5px), calc((10vh / 2) - 5px));
+  max-height: 50px;
+  min-height: 25px;
   border: 2px solid #000;
   border-radius: 5px;
   cursor: pointer;
   margin: calc(5px / 16);
   color: #fff;
-  font-family: 'Courier New', Courier, monospace;
+  /* This creates an outline so the text is legible with all colors */
+  text-shadow: 
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
+  font-family: 'Tahoma', sans-serif, monospace;
   font-size: large;
   background-color: var(--button-color);
   transition: background-color 0.2s;
@@ -76,6 +87,8 @@ html, body {
   flex-basis: calc((90vw / 16) - 5px);
   width: min(calc((90vw / 16) - 5px), calc((10vh / 2) - 5px));
   height: min(calc((90vw / 16) - 5px), calc((10vh / 2) - 5px));
+  max-height: 50px;
+  min-height: 15px;
   border: 2px solid #000;
   border-radius: 5px;
   cursor: pointer;

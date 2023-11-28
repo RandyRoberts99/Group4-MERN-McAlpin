@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db } from "./utils/firebase.js";
 import { onValue, ref, update } from "firebase/database";
-import { render } from "react-dom";
 import './App.css';
 
 function App() {
   // Constants handling the canvas directly (this will likely turn to database stuff later)
+  const canvasRef = useRef(null);
+  const canvasContainerRef = useRef(null);
   const [grids, setGrids] = useState({});
   const [canvasSize, setCanvasSize] = useState({ width: 512, height: 512 });
-  const canvasRef = useRef(null);
+  const [scale, setScale] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [pan, setPan] = useState({ x: 600, y: 600 });
 
@@ -61,12 +62,12 @@ function App() {
     // Iterate through each grid in the canvas
     Object.keys(data).forEach((gridKey) => {
       const grid = data[gridKey];
+      console.log("pan.x: ", pan.x, "pan.y: ", pan.y);
 
       // Iterate through each pixel within the given grid
       Object.keys(grid).forEach((pixelKey) => {
         const pixel = grid[pixelKey];
         context.fillStyle = pixel.color;
-        console.log("pan.x: ", pan.x, "pan.y: ", pan.y);
         context.fillRect(
           (pixel.x * zoomLevel + parseInt(gridKey.split('_')[0]) * zoomLevel * 16) - ((pan.x / 512) * ((512 * zoomLevel) - (512))) * zoomLevel,
           (pixel.y * zoomLevel + parseInt(gridKey.split('_')[1]) * zoomLevel * 16) - ((pan.y / 512) * ((512 * zoomLevel) - (512))) * zoomLevel,
@@ -77,7 +78,7 @@ function App() {
     if (highlightedPixel != null) {
       highlightPixel(context, highlightedPixel.x, highlightedPixel.y);
     }
-    console.log("updateLocalCanvas was run sucessfully.");
+    console.log("Subsequent render complete.");
   }, [canvasSize, zoomLevel, highlightedPixel]);
 
 
@@ -106,6 +107,28 @@ function App() {
     const context = canvas.getContext('2d');
     const gridsRef = ref(db, 'canvas');
 
+    // This function handles resizing the canvas on the initial page render
+    // according to the viewport window size
+    const handleResize = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const canvasContainer = canvasContainerRef.current;
+
+      if(canvasContainer && canvas){
+        const newScale = Math.max(Math.min((viewportWidth / canvasSize.width) * 0.75, (viewportHeight / canvasSize.height) * 0.73), 1);
+        canvasContainer.style.transform = `scale(${newScale})`;
+        setScale(newScale);
+      }
+    };
+    console.log("scale: ", scale);
+
+    // Resize the window based on viewport size
+    handleResize();
+
+    // Listen for window resizing events to keep it up to date
+    window.addEventListener('resize', handleResize);
+
+    // this handles the initial setup of any canvas based actions
     const updateCanvas = (data) => {
       // This adjusts canvas view size based on zoom level
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -124,6 +147,7 @@ function App() {
           );
         });
       });
+      console.log("Initial render complete.");
     };
 
     // Keep canvas pixels updated from the database
@@ -136,11 +160,12 @@ function App() {
       }
     });
 
-    // Cleanup function to detach the listener when the component unmounts
+    // Cleanup function to detach the listeners when the component unmounts
     return () => {
       listener();
+      window.removeEventListener('resize', handleResize);
     };
-  }, [canvasRef, updateLocalCanvas, zoomLevel]);
+  }, [canvasRef, updateLocalCanvas, zoomLevel, canvasSize.width, canvasSize.height]);
 
 
 
@@ -148,12 +173,10 @@ function App() {
   const handleCanvasClick = (event) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const context = canvas.getContext('2d');
 
-    // Scale pixel coordinates based on user zoom level
-    const x = Math.floor(((event.clientX - rect.left) / zoomLevel) + ((pan.x / 512) * ((512 * zoomLevel) - 512)));
-    const y = Math.floor(((event.clientY - rect.top) / zoomLevel) + ((pan.y / 512) * ((512 * zoomLevel) - 512)));
-    console.log("clickX: ", x, "clickY: ", y);
+    // Scale pixel coordinates based on user zoom level and viewport scale
+    const x = Math.floor(((((event.clientX - rect.left) / scale) / zoomLevel) + ((pan.x / 512) * ((512 * zoomLevel) - 512))));
+    const y = Math.floor(((((event.clientY - rect.top) / scale) / zoomLevel) + ((pan.y / 512) * ((512 * zoomLevel) - 512))));
 
     // Determine what grid needs to be updated in firebase
     const gridX = Math.floor(x / 16);
@@ -162,6 +185,8 @@ function App() {
     // Determine the position within the grid the pixel is in
     const pixelX = x % 16;
     const pixelY = y % 16;
+
+    console.log("clickX: ", (pixelX + gridX * 16), "clickY: ", (pixelY + gridY * 16), "scale: ", scale);
 
     // Update the state for highlighting
     setHighlightedPixel({
@@ -221,20 +246,21 @@ function App() {
 
     // Determine the scale factor for next zoom
     const scaleDelta = 0.05;
-    const scaleFactor = (event.deltaY > 0 ? 1 - scaleDelta : 1 + scaleDelta);
+    const scaleFactor = (event.deltaY > 0 ? 0 - (scaleDelta + 1) : 1 + scaleDelta);
 
     // Adjust these to set minimum and maximum zoom scales
     const maxZoom = 10;
     const minZoom = 1;
 
     // Calculate new zoom level
-    const newZoomLevel = Math.min(Math.max(zoomLevel * scaleFactor, minZoom), maxZoom);
+    const newZoomLevel = Math.min(Math.max(zoomLevel + scaleFactor, minZoom), maxZoom);
+    console.log("zoom: ", newZoomLevel);
 
     // Set pan values based on mouse cursor coords
     const rect = canvasRef.current.getBoundingClientRect();
     if (pan.x === 600 && pan.y === 600) {
-      const mouseX = (event.clientX - rect.left);
-      const mouseY = (event.clientY - rect.top);
+      const mouseX = Math.floor((event.clientX - rect.left) / scale);
+      const mouseY = Math.floor((event.clientY - rect.top) / scale);
       setPan({
         x: mouseX / newZoomLevel,
         y: mouseY / newZoomLevel,
@@ -263,7 +289,6 @@ function App() {
   // Handles the user selecting a color button to change their pixel color
   const handleColorChange = (color) => {
     // Console log for debugging
-    console.log(`User selected color: ${color.name}`);
 
     // Update the selected color for the user globally
     setSelectedColor(color.hex);
@@ -274,17 +299,15 @@ function App() {
 
   return (
     <div className="App">
-      <head>
-        <title>Nested Title</title>
-        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-      </head>
       <header className="header">
         Place Clone - Group 4
       </header>
-      <canvas ref={canvasRef} id="pixelCanvas"
-        onClick={handleCanvasClick}
-        onWheel={handleWheel}
-      ></canvas>
+      <div ref={canvasContainerRef} className="canvas-container">
+        <canvas ref={canvasRef} id="pixelCanvas"
+          onClick={handleCanvasClick}
+          onWheel={handleWheel}
+        ></canvas>
+      </div>
       <div className="colorBar">
         {colors.map((color) => (
           <div
