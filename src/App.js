@@ -115,7 +115,7 @@ function App() {
       const canvasContainer = canvasContainerRef.current;
 
       if(canvasContainer && canvas){
-        const newScale = Math.max(Math.min((viewportWidth / canvasSize.width) * 0.75, (viewportHeight / canvasSize.height) * 0.73), 1);
+        const newScale = Math.max(Math.min((viewportWidth / canvasSize.width) * 0.75, (viewportHeight / canvasSize.height) * 0.73), 0.5);
         canvasContainer.style.transform = `scale(${newScale})`;
         setScale(newScale);
       }

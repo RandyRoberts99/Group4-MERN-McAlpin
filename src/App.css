@@ -23,12 +23,12 @@ html, body {
    the color bar can scale with the viewport separately */
 .canvas-container {
   position: static;
-  transform-origin: top;
+  transform-origin: top center;
 }
 
 .App {
   /* This scales the canvas to the viewport size */
-  transform-origin: top;
+  transform-origin: top center;
 }
 
 #pixelCanvas {
@@ -39,8 +39,8 @@ html, body {
   background-color: #fff;
 
   /* This scales the pixels to the canvas */
-  transform-origin: top;
-  margin-bottom: calc(15vh + 172px + 10%);
+  transform-origin: top left;
+  margin-bottom: 100vh;
 }
 
 .colorBar {
