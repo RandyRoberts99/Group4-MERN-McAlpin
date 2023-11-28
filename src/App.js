@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db } from "./utils/firebase.js";
 import { onValue, ref, update } from "firebase/database";
+import './utils/pixel-perfect.js';
 import './App.css';
 
 function App() {
@@ -182,6 +183,9 @@ function App() {
     const pixelX = x % 16;
     const pixelY = y % 16;
 
+    // Output x/y values to the console
+    console.log("pixelX: ", x, "pixelY: ", y);
+
     // Update the state for highlighting
     setHighlightedPixel({
       x: (pixelX + gridX * 16),
@@ -299,6 +303,7 @@ function App() {
         <canvas ref={canvasRef} id="pixelCanvas"
           onClick={handleCanvasClick}
           onWheel={handleWheel}
+          width="514" height="514" style={{ width: "514px", height: "514px" }}
         ></canvas>
       </div>
       <div className="colorBar">

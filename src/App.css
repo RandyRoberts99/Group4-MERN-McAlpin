@@ -19,11 +19,19 @@ html, body {
   margin-bottom: 16px;
 }
 
+/* This aids in maintaining pixel stability across devices */
+.pixel-perfect {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 /* This is a container to wrap the canvas and pixels in, so that
    the color bar can scale with the viewport separately */
 .canvas-container {
   position: static;
   transform-origin: top center;
+  display: flex;
+  justify-content: center;
 }
 
 .App {
@@ -32,14 +40,15 @@ html, body {
 }
 
 #pixelCanvas {
+  position: static;
   border: 1px solid #000;
   cursor: pointer;
   display: block;
-  margin: auto;
+  margin: 0 auto;
   background-color: #fff;
 
   /* This scales the pixels to the canvas */
-  transform-origin: top left;
+  transform-origin: top center;
   margin-bottom: 100vh;
 }
 
