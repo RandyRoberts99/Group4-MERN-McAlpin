@@ -62,7 +62,6 @@ function App() {
     // Iterate through each grid in the canvas
     Object.keys(data).forEach((gridKey) => {
       const grid = data[gridKey];
-      console.log("pan.x: ", pan.x, "pan.y: ", pan.y);
 
       // Iterate through each pixel within the given grid
       Object.keys(grid).forEach((pixelKey) => {
@@ -78,8 +77,7 @@ function App() {
     if (highlightedPixel != null) {
       highlightPixel(context, highlightedPixel.x, highlightedPixel.y);
     }
-    console.log("Subsequent render complete.");
-  }, [canvasSize, zoomLevel, highlightedPixel]);
+  }, [canvasSize, zoomLevel, highlightedPixel, pan.x, pan.y]);
 
 
 
@@ -120,7 +118,6 @@ function App() {
         setScale(newScale);
       }
     };
-    console.log("scale: ", scale);
 
     // Resize the window based on viewport size
     handleResize();
@@ -147,7 +144,6 @@ function App() {
           );
         });
       });
-      console.log("Initial render complete.");
     };
 
     // Keep canvas pixels updated from the database
@@ -165,7 +161,7 @@ function App() {
       listener();
       window.removeEventListener('resize', handleResize);
     };
-  }, [canvasRef, updateLocalCanvas, zoomLevel, canvasSize.width, canvasSize.height]);
+  }, [canvasRef, updateLocalCanvas, zoomLevel, canvasSize.width, canvasSize.height, pan.x, pan.y, scale]);
 
 
 
@@ -185,8 +181,6 @@ function App() {
     // Determine the position within the grid the pixel is in
     const pixelX = x % 16;
     const pixelY = y % 16;
-
-    console.log("clickX: ", (pixelX + gridX * 16), "clickY: ", (pixelY + gridY * 16), "scale: ", scale);
 
     // Update the state for highlighting
     setHighlightedPixel({
@@ -254,7 +248,6 @@ function App() {
 
     // Calculate new zoom level
     const newZoomLevel = Math.min(Math.max(zoomLevel + scaleFactor, minZoom), maxZoom);
-    console.log("zoom: ", newZoomLevel);
 
     // Set pan values based on mouse cursor coords
     const rect = canvasRef.current.getBoundingClientRect();
