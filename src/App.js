@@ -303,7 +303,7 @@ function App() {
         <canvas ref={canvasRef} id="pixelCanvas"
           onClick={handleCanvasClick}
           onWheel={handleWheel}
-          width="514" height="514" style={{ width: "514px", height: "514px" }}
+          width="514" height="514" class="pixel-perfect" style={{ width: "514px", height: "514px" }}
         ></canvas>
       </div>
       <div className="colorBar">

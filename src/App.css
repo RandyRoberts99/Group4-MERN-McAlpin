@@ -19,12 +19,6 @@ html, body {
   margin-bottom: 16px;
 }
 
-/* This aids in maintaining pixel stability across devices */
-.pixel-perfect {
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
-
 /* This is a container to wrap the canvas and pixels in, so that
    the color bar can scale with the viewport separately */
 .canvas-container {
@@ -32,6 +26,11 @@ html, body {
   transform-origin: top center;
   display: flex;
   justify-content: center;
+
+  @media only screen and (max-width: 414px){
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
 }
 
 .App {
