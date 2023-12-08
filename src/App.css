@@ -51,6 +51,46 @@ html, body {
   margin-bottom: 100vh;
 }
 
+.arrowButtons {
+  position: fixed;
+  left: 25%;
+  bottom: calc(10% + 5vh + 2px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  width: 50%;
+  cursor: pointer;
+  transform-origin: bottom left;
+}
+
+.arrowButtons button {
+  background: rgb(141, 141, 141);
+  color: white;
+  border: solid black;
+  border-radius: 5px;
+  padding: 8px 10px;
+  font-size: 16px;
+  width: calc(90vw - 2 * calc(5px / 16));
+  height: min(calc((90vw / 16) - 5px), calc((10vh / 2) - 5px));
+  max-height: 35px;
+  min-height: 15px;
+  cursor: pointer;
+  margin: calc(5px / 16);
+  font-family: 'Tahoma', sans-serif, monospace;
+  font-size: large;
+  text-shadow: 
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
+     line-height: 1px;
+}
+
+.arrowButtons button:hover {
+  background: #333;
+}
+
 .colorBar {
   position: fixed;
   bottom: 10%;
@@ -101,10 +141,6 @@ html, body {
   border-radius: 5px;
   cursor: pointer;
   margin: calc(5px / 16);
-}
-
-.colorButton:hover {
-  background-color: #e0e0e0;
 }
 
 .title {

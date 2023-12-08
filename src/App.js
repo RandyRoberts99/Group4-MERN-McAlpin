@@ -226,7 +226,7 @@ function App() {
         }));
 
         // Deselect the highlighted pixel once it is placed
-        setHighlightedPixel(null);
+        // setHighlightedPixel(null);
 
         // Send updates to the database for the specific grid
         await update(ref(db, `canvas/${gridX}_${gridY}`), existingGrid);
@@ -283,6 +283,41 @@ function App() {
   };
 
 
+
+  // Handle arrow key interactions
+  const handleArrowClick = (direction) => {
+    // Check if a pixel is selected
+    if (!highlightedPixel) {
+      return;
+    }
+  
+    // Copy the current highlighted pixel
+    let newHighlightedPixel = { ...highlightedPixel };
+  
+    // Move the pixel based on the arrow key direction
+    switch (direction) {
+      case 'up':
+        newHighlightedPixel.y = Math.max(newHighlightedPixel.y - 1, 0);
+        break;
+      case 'down':
+        newHighlightedPixel.y = Math.min(newHighlightedPixel.y + 1, canvasSize.height - 1);
+        break;
+      case 'left':
+        newHighlightedPixel.x = Math.max(newHighlightedPixel.x - 1, 0);
+        break;
+      case 'right':
+        newHighlightedPixel.x = Math.min(newHighlightedPixel.x + 1, canvasSize.width - 1);
+        break;
+      default:
+        break;
+    }
+  
+    // Update the highlighted pixel state
+    setHighlightedPixel(newHighlightedPixel);
+  };
+
+
+
   // Handles the user selecting a color button to change their pixel color
   const handleColorChange = (color) => {
     // Console log for debugging
@@ -305,6 +340,12 @@ function App() {
           onWheel={handleWheel}
           width="514" height="514" class="pixel-perfect" style={{ width: "514px", height: "514px" }}
         ></canvas>
+      </div>
+      <div className="arrowButtons">
+        <button onClick={() => handleArrowClick('up')}><i className="arrow up"></i> &#5123; </button>
+        <button onClick={() => handleArrowClick('down')}><i className="arrow down"></i> &#5121; </button>
+        <button onClick={() => handleArrowClick('left')}><i className="arrow left"></i> &#5130; </button>
+        <button onClick={() => handleArrowClick('right')}><i className="arrow right"></i> &#5125; </button>
       </div>
       <div className="colorBar">
         {colors.map((color) => (
